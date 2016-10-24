@@ -16,7 +16,7 @@ Licensed under MIT (https://github.com/palantir/plottable/blob/master/LICENSE)
     // like Node.
     module.exports = factory(require("d3"));
   } else {
-    root['Plottable'] = factory(d3);
+    root['Plottable'] = factory(root["d3"]);
   }
 }(this, function (d3) {
 
@@ -11231,6 +11231,8 @@ var Plottable;
                 this._touchIds = d3.map();
                 this._minDomainExtents = new Plottable.Utils.Map();
                 this._maxDomainExtents = new Plottable.Utils.Map();
+                this._zoomInCallBack = function (n1, n2, n3) { return true; };
+                this._zoomOutCallBack = function (n1, n2, n3) { return true; };
                 if (xScale != null) {
                     this.addXScale(xScale);
                 }
@@ -11343,7 +11345,13 @@ var Plottable;
             };
             PanZoom.prototype._magnifyScale = function (scale, magnifyAmount, centerValue) {
                 var magnifyTransform = function (rangeValue) { return scale.invert(centerValue - (centerValue - rangeValue) * magnifyAmount); };
-                scale.domain(scale.range().map(magnifyTransform));
+                var _a = scale.range().map(magnifyTransform), newScaleMin = _a[0], newScaleMax = _a[1];
+                if (magnifyAmount >= 1 && this._zoomOutCallBack(newScaleMin, newScaleMax, magnifyAmount)) {
+                    scale.domain([newScaleMin, newScaleMax]);
+                }
+                else if (magnifyAmount < 1 && this._zoomInCallBack(newScaleMin, newScaleMax, magnifyAmount)) {
+                    scale.domain([newScaleMin, newScaleMax]);
+                }
             };
             PanZoom.prototype._translateScale = function (scale, translateAmount) {
                 var translateTransform = function (rangeValue) { return scale.invert(rangeValue + translateAmount); };
@@ -11406,6 +11414,14 @@ var Plottable;
             PanZoom.prototype._nonLinearScaleWithExtents = function (scale) {
                 return this.minDomainExtent(scale) != null && this.maxDomainExtent(scale) != null &&
                     !(scale instanceof Plottable.Scales.Linear) && !(scale instanceof Plottable.Scales.Time);
+            };
+            PanZoom.prototype.canZoomIn = function (zoomInCallBack) {
+                this._zoomInCallBack = zoomInCallBack;
+                return this;
+            };
+            PanZoom.prototype.canZoomOut = function (zoomOutCallBack) {
+                this._zoomOutCallBack = zoomOutCallBack;
+                return this;
             };
             PanZoom.prototype.xScales = function (xScales) {
                 var _this = this;

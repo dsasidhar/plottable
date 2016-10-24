@@ -4598,6 +4598,8 @@ declare namespace Plottable.Interactions {
         private _maxDomainExtents;
         private _panEndCallbacks;
         private _zoomEndCallbacks;
+        private _zoomInCallBack;
+        private _zoomOutCallBack;
         /**
          * A PanZoom Interaction updates the domains of an x-scale and/or a y-scale
          * in response to the user panning or zooming.
@@ -4620,6 +4622,8 @@ declare namespace Plottable.Interactions {
         private _constrainedZoomAmount(scale, zoomAmount);
         private _setupDragInteraction();
         private _nonLinearScaleWithExtents(scale);
+        canZoomIn(zoomInCallBack: (n1: Number, n2: Number, n3: Number) => Boolean): this;
+        canZoomOut(zoomOutCallBack: (n1: Number, n2: Number, n3: Number) => Boolean): this;
         /**
          * Gets the x scales for this PanZoom Interaction.
          */

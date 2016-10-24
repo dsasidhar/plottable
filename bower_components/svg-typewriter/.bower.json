@@ -45,7 +45,7 @@
     "tag": "v0.3.0",
     "commit": "6860d1243f9a887b87dc593dd535f73f36237041"
   },
-  "_source": "git://github.com/palantir/svg-typewriter.git",
+  "_source": "https://github.com/palantir/svg-typewriter.git",
   "_target": "0.3.0",
   "_originalSource": "svg-typewriter"
 }

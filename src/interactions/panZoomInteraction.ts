@@ -28,6 +28,8 @@ namespace Plottable.Interactions {
 
     private _panEndCallbacks = new Utils.CallbackSet<PanCallback>();
     private _zoomEndCallbacks = new Utils.CallbackSet<ZoomCallback>();
+    private _zoomInCallBack:(n1:any,n2:any,n3:any)=> Boolean;
+    private _zoomOutCallBack:(n1:any,n2:any,n3:any)=> Boolean;
 
     /**
      * A PanZoom Interaction updates the domains of an x-scale and/or a y-scale
@@ -46,6 +48,10 @@ namespace Plottable.Interactions {
       this._touchIds = d3.map<Point>();
       this._minDomainExtents = new Utils.Map<QuantitativeScale<any>, number>();
       this._maxDomainExtents = new Utils.Map<QuantitativeScale<any>, number>();
+
+      this._zoomInCallBack = (n1:Number,n2:Number,n3:Number) => true;
+      this._zoomOutCallBack = (n1:Number,n2:Number,n3:Number) => true;
+
       if (xScale != null) {
         this.addXScale(xScale);
       }
@@ -186,7 +192,13 @@ namespace Plottable.Interactions {
 
     private _magnifyScale<D>(scale: QuantitativeScale<D>, magnifyAmount: number, centerValue: number) {
       let magnifyTransform = (rangeValue: number) => scale.invert(centerValue - (centerValue - rangeValue) * magnifyAmount);
-      scale.domain(scale.range().map(magnifyTransform));
+      let [newScaleMin,newScaleMax] = scale.range().map(magnifyTransform);
+      if(magnifyAmount>=1 && this._zoomOutCallBack(newScaleMin,newScaleMax,magnifyAmount)){
+        scale.domain([newScaleMin,newScaleMax]);
+      }
+      else if(magnifyAmount<1 && this._zoomInCallBack(newScaleMin,newScaleMax,magnifyAmount)){
+        scale.domain([newScaleMin,newScaleMax]);
+      }
     }
 
     private _translateScale<D>(scale: QuantitativeScale<D>, translateAmount: number) {
@@ -260,6 +272,18 @@ namespace Plottable.Interactions {
     private _nonLinearScaleWithExtents(scale: QuantitativeScale<any>) {
       return this.minDomainExtent(scale) != null && this.maxDomainExtent(scale) != null &&
              !(scale instanceof Scales.Linear) && !(scale instanceof Scales.Time);
+    }
+
+
+    public canZoomIn(zoomInCallBack:(n1:Number,n2:Number,n3:Number)=>Boolean):this{
+      this._zoomInCallBack = zoomInCallBack;
+      return this;
+    }
+    
+
+    public canZoomOut(zoomOutCallBack:(n1:Number,n2:Number,n3:Number)=>Boolean):this{
+      this._zoomOutCallBack = zoomOutCallBack;
+      return this;
     }
 
     /**
